@@ -280,7 +280,11 @@ def query():
         conn.commit()
         #Close connection
         conn.close()
-    
+
+        # clear entry boxes
+        desire_entry.delete(0, END)
+
+
     def rank_highlow():
         if 'frame1' in locals():
             frame1.destroy()
@@ -305,11 +309,56 @@ def query():
         print_rankHL_label = Label(frame1, text=print_rankHL, justify=LEFT, anchor=W)
         print_rankHL_label.grid(row=1, column=1, pady=30)
 
+        # Commit changes
+        conn.commit()
+        #Close connection
+        conn.close()
+
+    def byrank():
+        if 'frame1' in locals():
+            frame1.destroy()
+        frame1 = Frame(root)
+        frame1.grid(row=1, column=0, columnspan=2, ipadx=30, ipady=50, sticky=NW)
+        # Create a database or connect to one
+        conn = sqlite3.connect('MovieDesire.db')
+        # Create cursor
+        c = conn.cursor()
+
+        get_rank_entry = rank_entry.get()
+        if get_rank_entry != '':
+            c.execute("SELECT *, oid FROM moviedesireDB WHERE watched_rank =" + str(get_rank_entry))
+            byrank_var = c.fetchall()
+
+            print_byrank_titles =''
+            print_byrank_info=''
+            
+            if len(byrank_var) == 0:
+                print_byrank_titles += "No movies with selected desire"
+                print_byrank_info += ""
+            else:
+                for i in byrank_var:
+                    if i[0] == '':
+                        print_byrank_titles += "No movies with selected desire"
+                    else:
+                        print_byrank_titles += str(i[0]) + "\n"
+                        print_byrank_info += "Rank: " + str(i[2]) + " | Desire: " + str(i[1]) + " | ID: " + str(i[3]) + "\n"
+        else:
+            print_bydesire_titles = "No desire entered"
+
+        print_byrank_titles_label = Label(frame1, text=print_byrank_titles, justify=LEFT, anchor=NW)
+        print_byrank_titles_label.grid(row=1, column=0, padx=30, pady=40)
+        print_byrank_info_label = Label(frame1, text=print_byrank_info, justify=LEFT, anchor=NW)
+        print_byrank_info_label.grid(row=1, column=1, padx=30, pady=40)
 
         # Commit changes
         conn.commit()
         #Close connection
         conn.close()
+
+        rank_entry.delete(0, END)
+
+
+        
 
     frame1 = Frame(root)
     frame1.grid(row=1, column=0, columnspan=2, padx=20, sticky=NW)
@@ -332,12 +381,19 @@ def query():
     desire_entry.grid(row=4, column=1, sticky=W)
     bydesire_button = Button(button_frame, text="View By Desire", command=bydesire)
     bydesire_button.grid(row=5, column=1, ipadx=7, pady=2, sticky=W)
-    
+    rank_entry = Entry(button_frame, width=6)
+    rank_entry.grid(row=6, column=1, sticky=W)
+    byrank_button = Button(button_frame, text="View By Rank", command=byrank)
+    byrank_button.grid(row=7, column=1, ipadx=7, pady=2, sticky=W)
 
     ### ENTER key ###
     def enter_bydesire(event):
         bydesire()
     desire_entry.bind('<Return>', enter_bydesire)
+
+    def enter_byrank(event):
+        byrank()
+    rank_entry.bind('<Return>', enter_byrank)
 
     # Commit changes
     conn.commit()
@@ -352,20 +408,15 @@ m_title = Entry(root, width=30)
 m_title.grid(row=3, column=1, padx=20, pady=(10,0))
 m_desire = Entry(root, width=30)
 m_desire.grid(row=4, column=1, padx=20)
-#w_rank = Entry(root, width=30)
-#w_rank.grid(row=5, column=1, padx=20)
 delete_box = Entry(root, width=30)
 delete_box.grid(row=9, column=1)
 
 # Create text box labels
 m_title_label = Label(root, text="Movie Title")
-#m_title_label.grid(row=0, column=0, pady=(10,0))
 m_title_label.grid(row=3, column=0, pady=(10,0))
 m_desire_label = Label(root, text="Movie Desire")
-#m_desire_label.grid(row=1, column=0)
 m_desire_label.grid(row=4, column=0)
 delete_box_label = Label(root, text="Select ID")
-#delete_box_label.grid(row=5, column=0, pady=(0,5))
 delete_box_label.grid(row=9, column=0, pady=(0,5))
 
 # Create submit button
@@ -375,7 +426,6 @@ submit_btn.grid(row=5, column=0, columnspan=2, padx=10, pady=10, ipadx=110)
 
 # Create a Query Button
 query_btn = Button(root, text="Show My List", command=query)
-#query_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=10, ipadx=137)
 query_btn.grid(row=0, column=0, columnspan=2, padx=10, pady=10, ipadx=137)
 
 
