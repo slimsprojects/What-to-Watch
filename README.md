@@ -7,6 +7,7 @@ There are buttons for different ways to view your data
 - highest to lowest desire
 - highest to lowest rank
 - by desire
+- by rank
 - whole list
 
 I have added some user error handling but still need to add more. This is currently a working V1.0. 
