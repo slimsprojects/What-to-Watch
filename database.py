@@ -1,9 +1,10 @@
 from tkinter import *
 import sqlite3
+import imdb
 
 
 root = Tk()
-root.title('My Movie Desire')
+root.title('What to Watch')
 #root.geometry("600x400")
 
 
@@ -31,7 +32,7 @@ conn = sqlite3.connect('MovieDesire.db')
 c = conn.cursor()
 
 
-# Create table
+##### Create table #####
 # only have to do once 
 '''
 c.execute("""CREATE TABLE moviedesireDB (
@@ -40,6 +41,23 @@ c.execute("""CREATE TABLE moviedesireDB (
         watched_rank integer
         )""")
 '''
+#####
+
+
+def imdb_rating(record_name):
+    moviesDB = imdb.IMDb()
+    movies = moviesDB.search_movie(record_name)
+
+    id = movies[0].getID()
+    movie = moviesDB.get_movie(id)
+
+    # title_imdb = movie['title']
+    # year_imdb = movie['year']
+    rating_imdb = movie['rating']
+    # directors_imdb = movie['directors']
+    # casting_imdb = movie['cast']
+
+    return rating_imdb
 
 
 # Create edit function to update record
@@ -181,6 +199,10 @@ def submit():
         # Close Connection
         conn.close()
 
+        label1_content = str(m_title.get()) + " added with Desire: " + str(m_desire.get())
+        label1 = Label(root, text=label1_content, fg='green')
+        label1.grid(row=6, column=1, ipadx=5, sticky=W)
+
         # Clear the text boxes
         m_title.delete(0, END)
         m_desire.delete(0, END)
@@ -206,9 +228,9 @@ def query():
     print_titles = ''
     print_desirerank = ''
     for record in records:
-        #print_records += str(record[0]) + " | " + " Desire: " + str(record[1]) + "\t" + " My Score: " +  str(record[2]) + "\t" + " ID: " + str(record[3]) + "\n"
-        print_titles += str(record[0]) + "\n"
-        print_desirerank += "Desire: " + str(record[1]) + "  | My Rank: " + str(record[2]) + "  | ID: " + str(record[3]) + "\n"
+        # imdb_rate = imdb_rating(str(record[0]))
+        print_titles += str(record[3]) + " : " + str(record[0]) + "\n"
+        print_desirerank += str(record[1]) + "\t" + str(record[2]) + "\t" + "\n"
 
     
     def highlow():
@@ -227,17 +249,60 @@ def query():
         print_titlesHL = ''
         print_desirerankHL = ''
         for x in highlow_var:
-            print_titlesHL += str(x[0]) + "\n"
-            print_desirerankHL += "Desire: " + str(x[1]) + " | My Rank: " + str(x[2]) + " | ID: " + str(x[3]) + "\n"
+            print_titlesHL += str(x[3]) + " : " + str(x[0]) + "\n"
+            print_desirerankHL += str(x[1]) + "\t" + str(x[2]) + "\t" + "\n"
+
+        print_titleheaderHL_label = Label(frame1, text="ID:  " + "Titles: ", justify=LEFT, font="none 15 underline")
+        print_titleheaderHL_label.grid(row=1, column=0, sticky=W, ipadx=18)
+        print_desirerankheaderHL_label = Label(frame1, text="Desire: " + " \t " + " Rank: ", justify=LEFT, font="none 15 underline")
+        print_desirerankheaderHL_label.grid(row=1, column=1, sticky=W)
+
         print_titlesHL_label = Label(frame1, text=print_titlesHL, justify=LEFT, anchor=NW)
-        print_titlesHL_label.grid(row=1, column=1, padx=20, pady=10)
-        print_desirerankHL_label = Label(frame1, text=print_desirerankHL, justify=LEFT, anchor=NW)
-        print_desirerankHL_label.grid(row=1, column=2, ipadx=20)
+        print_titlesHL_label.grid(row=2, column=0, padx=20, pady=10)
+        print_desirerankHL_label = Label(frame1, text=print_desirerankHL, anchor=NW)
+        print_desirerankHL_label.grid(row=2, column=1, padx=30)
 
         # Commit changes
         conn.commit()
         #Close connection
         conn.close()
+
+
+    def rank_highlow():
+        if 'frame1' in locals():
+            frame1.destroy()
+        frame1 = Frame(root)
+        frame1.grid(row=1, column=0, columnspan=2, ipadx=30, ipady=50, sticky=NW)
+
+        # Create a database or connect to one
+        conn = sqlite3.connect('MovieDesire.db')
+        # Create cursor
+        c = conn.cursor()
+
+        c.execute("SELECT *, oid FROM moviedesireDB ORDER BY watched_rank DESC")
+        rank_highlow_var = c.fetchall()
+        print_titlesrankHL = ''
+        print_rankHL = ''
+        for x in rank_highlow_var:   
+            if str(x[2]) != '':
+                print_titlesrankHL += str(x[3]) + " : " + str(x[0]) + "\n"
+                print_rankHL += str(x[1]) + "\t" + str(x[2]) + "\t" + "\n"
+
+        print_titleheaderRHL_label = Label(frame1, text="ID:  " + "Titles: ", justify=LEFT, font="none 15 underline")
+        print_titleheaderRHL_label.grid(row=1, column=0, sticky=W, ipadx=18)
+        print_desirerankheaderRHL_label = Label(frame1, text="Rank: " + " \t " + " Desire: ", justify=LEFT, font="none 15 underline")
+        print_desirerankheaderRHL_label.grid(row=1, column=1, sticky=W)
+        
+        print_titlesRHL_label = Label(frame1, text=print_titlesrankHL, justify=LEFT, anchor=NW)
+        print_titlesRHL_label.grid(row=2, column=0, padx=20, pady=10)
+        print_desirerankRHL_label = Label(frame1, text=print_rankHL, anchor=NW)
+        print_desirerankRHL_label.grid(row=2, column=1, padx=30, sticky=W)
+
+        # Commit changes
+        conn.commit()
+        #Close connection
+        conn.close()
+
 
     def bydesire():
         if 'frame1' in locals():
@@ -269,7 +334,8 @@ def query():
                         print_bydesire_titles += str(i[0]) + "\n"
                         print_bydesire_info += "Desire: " + str(i[1]) + " | Rank: " + str(i[2]) + " | ID: " + str(i[3]) + "\n"
         else:
-            print_bydesire_titles = "No desire entered"
+            print_bydesire_titles = ""
+            print_bydesire_info = "No desire entered"
 
         print_bydesire_titles_label = Label(frame1, text=print_bydesire_titles, justify=LEFT, anchor=NW)
         print_bydesire_titles_label.grid(row=1, column=0, padx=30, pady=40)
@@ -284,35 +350,6 @@ def query():
         # clear entry boxes
         desire_entry.delete(0, END)
 
-
-    def rank_highlow():
-        if 'frame1' in locals():
-            frame1.destroy()
-        frame1 = Frame(root)
-        frame1.grid(row=1, column=0, columnspan=2, ipadx=30, ipady=50, sticky=NW)
-
-        # Create a database or connect to one
-        conn = sqlite3.connect('MovieDesire.db')
-        # Create cursor
-        c = conn.cursor()
-
-        c.execute("SELECT *, oid FROM moviedesireDB ORDER BY watched_rank DESC")
-        rank_highlow_var = c.fetchall()
-        print_titlesrankHL = ''
-        print_rankHL = ''
-        for x in rank_highlow_var:   
-            if str(x[2]) != '':
-                print_titlesrankHL += str(x[0]) + "\n"
-                print_rankHL += "Rank: " + str(x[2]) + " | Desire: " + str(x[1]) + " | ID: " + str(x[3]) + "\n"
-        print_titlesrankHL_label = Label(frame1, text=print_titlesrankHL, justify=LEFT, anchor=NW)
-        print_titlesrankHL_label.grid(row=1, column=0, padx=30, pady=30)
-        print_rankHL_label = Label(frame1, text=print_rankHL, justify=LEFT, anchor=W)
-        print_rankHL_label.grid(row=1, column=1, pady=30)
-
-        # Commit changes
-        conn.commit()
-        #Close connection
-        conn.close()
 
     def byrank():
         if 'frame1' in locals():
@@ -333,17 +370,18 @@ def query():
             print_byrank_info=''
             
             if len(byrank_var) == 0:
-                print_byrank_titles += "No movies with selected desire"
+                print_byrank_titles += "No movies with selected rank"
                 print_byrank_info += ""
             else:
                 for i in byrank_var:
                     if i[0] == '':
-                        print_byrank_titles += "No movies with selected desire"
+                        print_byrank_titles += "No movies with selected rank"
                     else:
                         print_byrank_titles += str(i[0]) + "\n"
                         print_byrank_info += "Rank: " + str(i[2]) + " | Desire: " + str(i[1]) + " | ID: " + str(i[3]) + "\n"
         else:
-            print_bydesire_titles = "No desire entered"
+            print_byrank_titles = ""
+            print_byrank_info="No rank entered"
 
         print_byrank_titles_label = Label(frame1, text=print_byrank_titles, justify=LEFT, anchor=NW)
         print_byrank_titles_label.grid(row=1, column=0, padx=30, pady=40)
@@ -363,10 +401,16 @@ def query():
     frame1 = Frame(root)
     frame1.grid(row=1, column=0, columnspan=2, padx=20, sticky=NW)
 
+    print_titleheader_label = Label(frame1, text="ID:  " + "Title: ", justify=LEFT, font="none 15 underline")
+    print_titleheader_label.grid(row=1, column=0, sticky=W)
+    print_desirerankheader_label = Label(frame1, text=" Desire: " + "\t" + "  Rank: ", justify=LEFT, font="none 15 underline")
+    print_desirerankheader_label.grid(row=1, column=1, sticky=W)
+
+
     print_titles_label = Label(frame1, text=print_titles, justify=LEFT)
-    print_titles_label.grid(row=1, column=0)
+    print_titles_label.grid(row=2, column=0)
     print_desirerank_label = Label(frame1, text=print_desirerank, justify=LEFT)
-    print_desirerank_label.grid(row=1, column=1, ipadx=35)
+    print_desirerank_label.grid(row=2, column=1, ipadx=30, sticky=W)
     
     button_frame = Frame(root, bd=2)
     button_frame.grid(row=1, column=3, sticky=NW)
