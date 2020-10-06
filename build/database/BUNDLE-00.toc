@@ -1,1 +1,0 @@
-([('database', '/Users/SpencerLim1/NicMovies/dist/database', 'EXECUTABLE')],)
