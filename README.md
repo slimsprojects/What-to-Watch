@@ -1,5 +1,5 @@
 # What-to-Watch
-The What to Watch app: add movies to watch to a database with a desire score then rank it after\
+The What to Watch app: add movies to watch to a database with a desire score then rank it after
 
 Install Instructions:\
 set up pyenv and set python version version to python 3.8.1\
